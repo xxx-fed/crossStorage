@@ -1,11 +1,15 @@
 ﻿/**
  * 跨域存储
- * window.huya_crossStorage
+ * github: https://github.com/huya-fed/crossStorage
  */
-(function(window, $){
-    if (window.huya_crossStorage) return;
-
-    var crossStorage = window.huya_crossStorage = {
+(function (global, factory) {
+    if (typeof define === 'function') {
+        define(factory)
+    } else {
+        global.crossStorage = factory()
+    }
+}(this, function(){
+    var crossStorage = {
         setItem: function (key, val) {},
         getItem: function (key) {},
         removeItem: function (key) {},
@@ -19,16 +23,26 @@
     // 不支持 postMessage 不能实现跨域存储，那么就降级为存在当前页面
     if (!isPostMessageSupported) {
         if (isStorageSupported) {
-            crossStorage = window.huya_crossStorage = localStorage
+            crossStorage = localStorage
         }
 
-        return
+        return crossStorage
     }
 
     // 代理仓库(本地数据库)
     var proxyReady = (function(){
         var proxy = null
-        var defer = $.Deferred()
+        var storage = null
+        var isReady = false
+        var callbacks = []
+        var onload = function () {
+            isReady = true
+            storage = proxy.contentWindow
+
+            for (var i = 0, l = callbacks.length; i < l; i++) {
+                callbacks[i](storage)
+            }
+        }
 
         return function (callback) {
             if (!proxy) {
@@ -38,14 +52,18 @@
                 // 先插入再赋值src，否则IE6下onload事件将不会触发
                 document.body.insertBefore(proxy, document.body.firstChild);
 
-                $(proxy).on('load', function(){
-                    defer.resolve(proxy.contentWindow)
-                });
+                if (proxy.attachEvent){
+                    proxy.attachEvent("onload", onload)
+                } else {
+                    proxy.onload = onload
+                }
 
                 proxy.src = 'http://hd.huya.com/proxy/storage.html';
             }
 
-            defer.done(callback)
+            if (typeof callback === 'function') {
+                isReady ? callback(storage) : callbacks.push(callback)
+            }
         }
     })();
 
@@ -104,9 +122,9 @@
 
             if (data.token) {
                 if (data.token === 'STORE_CHANGE') {
-                    $.each(storeChangeCallbacks, function(i, callback){
-                        callback(data.data)
-                    })
+                    for (var i = 0, l = storeChangeCallbacks.length; i < l; i++) {
+                        storeChangeCallbacks[i](data.data)
+                    }
                 } else {
                     sendSuccessCallbacks[data.token](data.data)
                 }
@@ -147,4 +165,6 @@
             proxyReady()
         }
     }
-})(window, jQuery);
+
+    return crossStorage
+}));
