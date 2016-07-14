@@ -24,4 +24,5 @@ crossStorage.change(function(e){    // 模拟 window.onstorage 事件
 
 ## 原理
 * 数据存储在代理页面(http://hd.huya.com/proxy/storage.html)
-* 父页面使用iframe内嵌代理页，通过 postMessage 进行存取
+* 存储使用 [Store.js](https://github.com/marcuswestin/store.js)：localStorage（标准浏览器 + ie 8+） + userData （ie 6/7）
+* 父页面使用iframe内嵌代理页，通过 postMessage 通信
