@@ -56,18 +56,12 @@
     }
 
     if (window.addEventListener) {
-        var timeout = null;
-
         window.addEventListener('storage', function(e){
-            if (timeout) clearTimeout(timeout);
-
-            timeout = setTimeout(function(){
-                send('STORE_CHANGE', {
-                    key: e.key,
-                    oldValue: e.oldValue,
-                    newValue: e.newValue
-                })
-            }, 60)
+            send('STORE_CHANGE', {
+                key: e.key,
+                oldValue: e.oldValue,
+                newValue: e.newValue
+            })
         })
     }
 
