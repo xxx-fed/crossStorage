@@ -1,0 +1,92 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>storage</title>
+</head>
+<body>
+<!-- https://github.com/marcuswestin/store.js -->
+<script type="text/javascript" src="http://a.dwstatic.com/huya/za7za8/store.n.json2.min.js"></script>
+<script>
+(function(){
+    if ( !('postMessage' in window) ) return;
+
+    var sign = 'CROSS_STORAGE'
+
+    if ( 'addEventListener' in document ) {
+        window.addEventListener('message', handler, false);
+    }
+    else if ( 'attachEvent' in document ) {
+        window.attachEvent('onmessage', handler);
+    }
+
+    function handler (msg) {
+        if ( !(/\.huya\.com$/.test(msg.origin)) ) return;
+
+        var data = null
+
+        try {
+            data = JSON.parse(msg.data)
+        } catch (e) {}
+
+        // 拆包
+        if (data && data.sign === sign) {
+            action[data.type](data.data, data.token)
+        }
+    }
+
+    var action = {
+        set: function (data) {
+            if (!data) return;
+
+            for (var p in data) {
+                if ( data.hasOwnProperty(p) ) store.set(p, data[p]); // Store an object literal - store.js uses JSON.stringify under the hood
+            }
+        },
+        get: function (key, token) {
+            send(token, store.get(key)) // Get the stored object - store.js uses JSON.parse under the hood
+        },
+        del: function (key) {
+            if (typeof key !== 'undefined') {
+                store.remove(key)
+            } else {
+                store.clear()
+            }
+        }
+    }
+
+    if (window.addEventListener) {
+        var timeout = null;
+
+        window.addEventListener('storage', function(e){
+            if (timeout) clearTimeout(timeout);
+
+            timeout = setTimeout(function(){
+                send('STORE_CHANGE', {
+                    key: e.key,
+                    oldValue: e.oldValue,
+                    newValue: e.newValue
+                })
+            }, 60)
+        })
+    }
+
+    function send (token, data) {
+        var msg = ''
+
+        try {
+            msg = JSON.stringify({
+                sign: sign,
+                token: token,
+                data: data
+            })
+        } catch (e) {}
+
+        if (msg) {
+            parent.postMessage(msg, '*')
+        }
+    }
+})()
+</script>
+</body>
+</html>
