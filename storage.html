@@ -6,7 +6,7 @@
 </head>
 <body>
 <!-- https://github.com/marcuswestin/store.js -->
-<script type="text/javascript" src="http://a.dwstatic.com/huya/za7za8/store.n.json2.min.js"></script>
+<script type="text/javascript" src="//a.dwstatic.com/huya/za7za8/store.n.json2.min.js"></script>
 <script>
 (function(){
     if ( !('postMessage' in window) ) return;
@@ -37,8 +37,6 @@
 
     var action = {
         set: function (data) {
-            if (!data) return;
-
             for (var p in data) {
                 if ( data.hasOwnProperty(p) ) store.set(p, data[p]); // Store an object literal - store.js uses JSON.stringify under the hood
             }
