@@ -5,11 +5,9 @@
     <title>storage</title>
 </head>
 <body>
-<!-- https://github.com/marcuswestin/store.js -->
-<script type="text/javascript" src="//a.dwstatic.com/huya/za7za8/store.n.json2.min.js"></script>
 <script>
 (function(){
-    if ( !('postMessage' in window) ) return;
+    if ( !('postMessage' in window) || !('localStorage' in window) ) return;
 
     var sign = 'CROSS_STORAGE'
 
@@ -37,28 +35,49 @@
 
     var action = {
         set: function (data) {
-            for (var p in data) {
-                if ( data.hasOwnProperty(p) ) store.set(p, data[p]); // Store an object literal - store.js uses JSON.stringify under the hood
+            for (var key in data) {
+                if ( data.hasOwnProperty(key) ) {
+                    var val = data[key]
+
+                    try {
+                        val = JSON.stringify(val)
+                    } catch(e) {}
+
+                    localStorage.setItem(key, val)
+                }
             }
         },
         get: function (key, token) {
-            send(token, store.get(key)) // Get the stored object - store.js uses JSON.parse under the hood
+            var val = localStorage.getItem(key)
+
+            try {
+                val = JSON.parse(val)
+            } catch(e) {}
+         
+            send(token, val)
         },
         del: function (key) {
-            if (typeof key !== 'undefined') {
-                store.remove(key)
-            } else {
-                store.clear()
-            }
+            key ? localStorage.removeItem(key) : localStorage.clear()
         }
     }
 
     if (window.addEventListener) {
         window.addEventListener('storage', function(e){
+            var oldValue = e.oldValue
+            var newValue = e.newValue
+
+            try {
+                oldValue = JSON.parse(oldValue)
+            } catch(e) {}
+            
+            try {
+                newValue = JSON.parse(newValue)
+            } catch(e) {}
+
             send('STORE_CHANGE', {
                 key: e.key,
-                oldValue: e.oldValue,
-                newValue: e.newValue
+                oldValue: oldValue,
+                newValue: newValue
             })
         })
     }
