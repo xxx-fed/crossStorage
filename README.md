@@ -2,6 +2,8 @@
 
 具有跨域能力的localStorage。*（需要浏览器支持 localStorage 和 postMessage）*
 
+*（win7 + IE 11 下 在进行 跨页面localStorage存储 读取时会存在内存泄露的情况，so，如要兼容IE则不推荐使用）*
+
 ## API 
 
   * setItem(key, val)
